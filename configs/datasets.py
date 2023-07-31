@@ -19,7 +19,14 @@ class grammar_dataset:
     test_split: str = "ft_datasets/grammar_dataset/grammar_validation.csv"
     input_length: int = 2048
 
-    
+@dataclass
+class endorse_dataset:
+    dataset: str = "endorse_dataset"
+    train_split: str = "train"
+    test_split: str = "val"
+    data_path: str = "ft_datasets/endorse_data.csv"   
+    input_length: int = 400
+
 @dataclass
 class alpaca_dataset:
     dataset: str = "alpaca_dataset"
