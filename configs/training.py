@@ -6,7 +6,7 @@ from typing import ClassVar
 
 @dataclass
 class train_config:
-    model_name: str="/n/holyscratch01/snyder_lab/endorse/models--meta-llama--Llama-2-7b-hf"
+    model_name: str="/n/holyscratch01/snyder_lab/endorse/llama"
     enable_fsdp: bool= False 
     run_validation: bool=True
     batch_size_training: int=1
@@ -27,7 +27,7 @@ class train_config:
     freeze_layers: bool = False
     num_freeze_layers: int = 1
     quantization: bool = False
-    one_gpu: bool = False
+    one_gpu: bool = True
     save_model: bool = True
     dist_checkpoint_root_folder: str="/n/holyscratch01/snyder_lab/endorse/finetuned/FSDP/model" # will be used if using FSDP
     dist_checkpoint_folder: str="fine-tuned" # will be used if using FSDP

@@ -18,7 +18,7 @@ DATASET_PREPROC = {
     "alpaca_dataset": partial(get_alpaca_dataset, max_words=224),
     "grammar_dataset": get_grammar_dataset,
     "samsum_dataset": get_samsum_dataset,
-    "endorse_dataset": get_endorse_dataset,
+    "endorse_dataset": partial(get_endorse_dataset, max_length=4096),
 }
 
 

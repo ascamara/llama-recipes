@@ -1,19 +1,22 @@
 import html
+import copy
 import csv
 import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-
 class Endorse_Dataset(Dataset):
-    def __init__(self, dataset_config, tokenizer, partition="train", max_length=400):
+    def __init__(self, dataset_config, tokenizer, partition="train", max_length=2048):
         
+        #self.prompt = (
+        #        f"Classify this newspaper page as 1 if it contains an editorial article and 0 if it does NOT contain an editorial article:\n{{page}}\n---\nClassification:\n{{label}}{{eos_token}}"
+         #   )
         self.prompt = (
-                f"Classify this newspaper page as 1 if it contains an editorial article and 0 if it does NOT contain an editorial article:\n{{page}}\n---\nClassification:\n{{label}}{{eos_token}}"
-            )
+                f"Classify this newspaper page as 1 if it contains an editorial article and 0 if it does NOT contain an editorial article:{{page}}{{eos_token}}"
+        )
 
         cols = ['label','accessed','location','date','newspaper','page','url','uid','ocr_text','year']
-        df = pd.read_csv("../../data/endorsedata.csv",names=cols,skiprows=1)
+        df = pd.read_csv("/n/home09/acamara/endorse/data/endorsedata.csv",names=cols,skiprows=1)
 
         df['label'] = df['label'].map({'N': int(0), 'E': int(1)})
         df['ocr_text'] = df['ocr_text'].apply(html.unescape)
@@ -52,14 +55,13 @@ class Endorse_Dataset(Dataset):
 
     def __len__(self):
         return len(self.texts)
-    
+        
+        
     def __getitem__(self, idx):
         prompt_ex = self.prompt.format(
             page=self.texts[idx],
-            label=self.labels[idx],
-            eos_token=self.tokenizer.eos_token,
+            eos_token=self.tokenizer.eos_token_id
         )
-
         # Padding our input.
         encoded_text = self.tokenizer(
             prompt_ex, 
@@ -73,10 +75,6 @@ class Endorse_Dataset(Dataset):
         attention_mask = encoded_text['attention_mask'].squeeze()
         labels = torch.tensor(self.labels[idx], dtype=torch.int64)
          
-        print(input_ids.size())
-        print(attention_mask.size())
-        print(labels.size())
-        
         inputs = {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
@@ -85,28 +83,4 @@ class Endorse_Dataset(Dataset):
 
         return inputs
 
-#    def __getitem__(self, idx):
-#
- #       prompt_ex = self.prompt.format(
-  #              page=self.texts[idx],
-   #             label=self.labels[idx],
-     #           eos_token=self.tokenizer.eos_token,
-    #         )
-    #    print(prompt_ex) 
-    #    encoded_text = self.tokenizer(prompt_ex)
-
-     #   input_ids = torch.tensor(encoded_text['input_ids'], dtype=torch.int64)
-     #   attention_mask = torch.tensor(encoded_text['attention_mask'], dtype=torch.int64)
-     #   labels = torch.tensor(self.labels[idx], dtype=torch.int64)
-        
-      #  print(input_ids.size())
-     #   print(attention_mask.size())
- #       print(labels.size())
-#
-  #      inputs = {
-   #         'input_ids': input_ids,
-    #        'attention_mask': attention_mask,
-     #       'labels': labels
-      #  }
-       # return inputs
 

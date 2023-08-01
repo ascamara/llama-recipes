@@ -61,6 +61,8 @@ def train(model, train_dataloader,eval_dataloader, tokenizer, optimizer, lr_sche
     
     Returns: results dictionary containing average training and validation perplexity and loss
     """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Create a gradient scaler for fp16
     if train_config.use_fp16 and train_config.enable_fsdp:
         scaler = ShardedGradScaler()
@@ -80,10 +82,12 @@ def train(model, train_dataloader,eval_dataloader, tokenizer, optimizer, lr_sche
             data_set_len = 0
             for step, batch in enumerate(tqdm(train_dataloader,colour="blue", desc=f"Training Epoch{epoch}")):
                 for key in batch.keys():
+                    assert not torch.any(torch.isnan(batch[key])), f"Batch contains NaN values at key: {key}"
+                    assert not torch.any(torch.isinf(batch[key])), f"Batch contains Inf values at key: {key}"
                     if train_config.enable_fsdp:
                         batch[key] = batch[key].to(local_rank)
                     else:
-                        batch[key] = batch[key].to('cuda:0')              
+                        batch[key] = batch[key].to('cuda:0')
                 loss = model(**batch).loss
                 loss = loss / gradient_accumulation_steps
                 total_loss += loss.detach().float()

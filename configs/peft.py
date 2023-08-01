@@ -10,7 +10,7 @@ class lora_config:
      lora_alpha: int=32
      target_modules: ClassVar[List[str]]= ["q_proj", "v_proj"]
      bias= "none"
-     task_type: str= "CAUSAL_LM"
+     task_type: str="SEQ_CLS"
      lora_dropout: float=0.05
      inference_mode: bool = False
 
@@ -18,9 +18,9 @@ class lora_config:
 class llama_adapter_config:
      adapter_len: int= 10
      adapter_layers: int= 30
-     task_type: str= "CAUSAL_LM"
+     task_type: str="SEQ_CLS"
 
 @dataclass
 class prefix_config:
      num_virtual_tokens: int=30
-     task_type: str= "CAUSAL_LM"    
+     task_type: str="SEQ_CLS"    

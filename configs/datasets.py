@@ -25,7 +25,7 @@ class endorse_dataset:
     train_split: str = "train"
     test_split: str = "val"
     data_path: str = "ft_datasets/endorse_data.csv"   
-    input_length: int = 400
+    input_length: int = 2048
 
 @dataclass
 class alpaca_dataset:

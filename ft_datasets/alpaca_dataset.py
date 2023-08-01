@@ -69,6 +69,10 @@ class InstructionDataset(Dataset):
         labels[~label_mask] = 0
         example_mask = example_mask.float()
         label_mask = label_mask.float()
+        
+        print(example.shape)
+        print(labels.shape)
+        print(example_mask.shape)
 
         return {
             "input_ids": example,
