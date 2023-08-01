@@ -16,6 +16,7 @@ from tqdm import tqdm
 from utils import fsdp_auto_wrap_policy
 from transformers import (
     LlamaForCausalLM,
+    LlamaForSequenceClassification,
     LlamaTokenizer,
     AutoModelForCausalLM,
     AutoModelForSeq2SeqLM,
@@ -90,12 +91,14 @@ def main(**kwargs):
     gradient_accumulation_steps = train_config.batch_size_training // train_config.micro_batch_size
      
     # Load the pre-trained model and setup its configuration
-    model = LlamaForCausalLM.from_pretrained(
+    model = LlamaForSequenceClassification.from_pretrained(
+#    model = LlamaForCausalLM.from_pretrained(
         train_config.model_name,
         load_in_8bit=True if train_config.quantization else None,
         device_map="auto" if train_config.quantization else None,
+        num_labels=2
     )
-    
+    print('HELLO')
     print_model_size(model, train_config, rank if train_config.enable_fsdp else 0)
     
     # Prepare the model for int8 training if quantization is enabled
@@ -107,13 +110,14 @@ def main(**kwargs):
         model.to(torch.bfloat16)
 
     # Load the tokenizer and add special tokens
-    tokenizer = LlamaTokenizer.from_pretrained(train_config.model_name)
+    tokenizer = LlamaTokenizer.from_pretrained("/n/holyscratch01/snyder_lab/endorse/llama")
     tokenizer.add_special_tokens(
             {
             
                 "pad_token": "<PAD>",
             }
-        )
+        )   
+    tokenizer.pad_token=0
     if train_config.use_peft:
         peft_config = generate_peft_config(train_config, kwargs)
         model = get_peft_model(model, peft_config)
@@ -181,13 +185,21 @@ def main(**kwargs):
     train_dataloader = torch.utils.data.DataLoader(
         dataset_train,
         batch_size=train_config.batch_size_training,
-        num_workers=train_config.num_workers_dataloader,
+        num_workers=0,#train_config.num_workers_dataloader,
         pin_memory=True,
         sampler=train_sampler if train_sampler else None,
         drop_last=True,
         collate_fn=default_data_collator,
     )
 
+    for batch in train_dataloader:
+        print(batch)  # Assuming your dataset returns a tuple (inputs, targets)
+        break  # This stops the loop after the first batch
+
+    # Get the total number of batches
+    num_batches = len(train_dataloader)
+    print(num_batches)
+    
     if train_config.run_validation:
         eval_dataloader = torch.utils.data.DataLoader(
             dataset_val,
@@ -216,6 +228,7 @@ def main(**kwargs):
         )
     scheduler = StepLR(optimizer, step_size=1, gamma=train_config.gamma)
 
+    print('go')
     # Start the training process
     results = train(
         model,
